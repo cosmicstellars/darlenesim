@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Darlene Simulator</title>
+  <link rel="icon" type="image/png" href="./images/Logo.png">
+  <style>
+    @font-face {
+      font-family: 'Outfit';
+      src: url('./Fonts/Outfit-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    body {
+      background-image: url('./images/Background.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: white;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 800px;
+      height: 600px;
+      position: relative;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+
+    .container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .text-and-logo {
+      position: absolute;
+      top: 90px;
+      left: 140px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .text-and-logo img {
+      height: 200px;
+      width: auto;
+    }
+
+    .text-overlay {
+      font-size: 40px;
+      color: white;
+    }
+
+    .countdown {
+      position: absolute;
+      top: 310px;
+      left: 125px;
+      z-index: 2;
+      font-size: 100px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .character {
+      position: absolute;
+      right: -70px;
+      height: 650px;
+      z-index: 2;
+    }
+
+    .character img {
+      height: 100%;
+    }
+
+    .download-button {
+      position: absolute;
+      top: 370px;
+      left: 184px;
+      z-index: 2;
+      display: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+.download-button img:hover {
+  filter: brightness(70%);
+  transition: filter 0.2s ease;
+}
+
+.download-button.disabled {
+  filter: brightness(50%);
+  pointer-events: none;
+}
+
+    .download-button img {
+      width: 400px;
+      height: auto;
+    }
+
+    .download-button span {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      color: white;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <img src="./images/Box.png" alt="Sample Image">
+
+      <div class="text-and-logo">
+        <img src="./images/Logo.png" alt="Logo">
+        <div class="text-overlay" id="release-text">will release in:</div>
+      </div>
+
+      <div class="countdown" id="countdown">Loading...</div>
+
+      <div class="download-button" id="download-button">
+        <img src="./images/Button.png" alt="Download Button">
+        <span>download now!</span>
+      </div>
+    </div>
+
+    <div class="character">
+      <img src="./images/Darlene.png" alt="Darlene">
+    </div>
+  </div>
+
+  <script>
+  const releaseDate = new Date("2025-07-23T00:00:00").getTime();
+
+  const countdownEl = document.getElementById("countdown");
+  const releaseTextEl = document.getElementById("release-text");
+  const downloadButtonEl = document.getElementById("download-button");
+
+  function fetchDownloadLink() {
+  const webhookUrl = "https://discord.com/api/webhooks/1396914528310005984/gu9oN3C21fz1CDG3tutWE-1nWKClyK3YWS3h5tetW7r5kRqQ0cYa1SKt3MYFDN5cyAr8/messages/1396914759810420746";
+
+  fetch(webhookUrl)
+    .then(response => response.json())
+    .then(data => {
+      const messageContent = (data.content || "").trim();
+
+      if (messageContent.startsWith("http")) {
+        const anchor = document.createElement("a");
+        anchor.href = messageContent;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+
+        // Move button content into anchor
+        while (downloadButtonEl.firstChild) {
+          anchor.appendChild(downloadButtonEl.firstChild);
+        }
+
+        downloadButtonEl.appendChild(anchor);
+        downloadButtonEl.style.display = "block";
+      } else {
+        // Show a "disabled" styled button with alternate text
+        downloadButtonEl.classList.add("disabled");
+        downloadButtonEl.style.display = "block";
+        const span = downloadButtonEl.querySelector("span");
+        if (span) span.textContent = "download coming soon!";
+      }
+    })
+    .catch(error => {
+      console.error("Error fetching webhook message:", error);
+      // Fallback to show disabled button
+      downloadButtonEl.classList.add("disabled");
+      downloadButtonEl.style.display = "block";
+      const span = downloadButtonEl.querySelector("span");
+      if (span) span.textContent = "download coming soon!";
+    });
+}
+
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = releaseDate - now;
+
+    if (distance <= 0) {
+      document.querySelector('.text-and-logo').style.left = '170px';
+      document.querySelector('.text-and-logo').style.top = '160px';
+      releaseTextEl.textContent = "OUT NOW!";
+      countdownEl.style.display = "none";
+
+      fetchDownloadLink(); // Only fetch after countdown ends
+      clearInterval(interval); // Stop countdown updates
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    const dd = String(days).padStart(2, '0');
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+
+    countdownEl.innerHTML = `${dd}:${hh}:${mm}:${ss}`;
+  }
+
+  const interval = setInterval(updateCountdown, 1000);
+  updateCountdown();
+</script>
+
+
+</body>
+</html>
